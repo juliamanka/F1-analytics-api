@@ -1,0 +1,6 @@
+@F1Analytics_HostAddress = http://localhost:5288
+
+GET {{F1Analytics_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
