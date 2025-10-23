@@ -1,28 +1,33 @@
+using F1Analytics.Configuration;
 using F1Analytics.Database.Models;
 using F1Analytics.DTOs;
 using F1Analytics.Requests.Measurement;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 
 namespace F1Analytics.Database.Repositories;
 
 public class MeasurementRepository : IMeasurementRepository
 {
     private readonly F1AnalyticsDbContext _context;
+    private readonly PagedResultConfiguration _pagedResultConfig;
 
-    public MeasurementRepository(F1AnalyticsDbContext context)
+    public MeasurementRepository(F1AnalyticsDbContext context, IOptions<PagedResultConfiguration> pagedResultConfig)
     {
         _context = context;
+        _pagedResultConfig = pagedResultConfig.Value;
     }
 
-    public async Task<PagedResult<MeasurementDto>> GetFilteredMeasurementsAsync(MeasurementFilterParameters filters)
+    public async Task<PagedResult<MeasurementDto>> GetFilteredMeasurementsPagedAsync(MeasurementFilterParameters filters)
     {
         var query = _context.Measurements
             .Include(m => m.Series)
             .AsQueryable();
 
-        if (!string.IsNullOrEmpty(filters.SeriesId))
+        if (filters.SeriesIds != null && filters.SeriesIds.Any())
         {
-            query = query.Where(m => m.SeriesId == filters.SeriesId);
+            var ids = filters.SeriesIds.Select(id => id.ToLower()).ToList();
+            query = query.Where(m => ids.Contains(m.SeriesId.ToLower()));
         }
 
         if (filters.StartDate.HasValue)
@@ -65,7 +70,7 @@ public class MeasurementRepository : IMeasurementRepository
             Items = items,
             TotalCount = totalCount,
             Page = filters.Page,
-            PageSize = filters.PageSize,
+            PageSize = _pagedResultConfig.DefaultPageSize,
             TotalPages = (int)Math.Ceiling(totalCount / (double)filters.PageSize)
         };
     }
@@ -112,6 +117,38 @@ public class MeasurementRepository : IMeasurementRepository
         _context.Measurements.Remove(measurement);
         await _context.SaveChangesAsync();
         return true;
+    }
+
+    public async Task<List<MeasurementDto>> GetFilteredMeasurementsAsync(MeasurementDashboardFilters filters)
+    {
+        var query = _context.Measurements
+            .Include(m => m.Series)
+            .AsQueryable();
+
+        if (filters.SeriesIds != null && filters.SeriesIds.Any())
+        {
+            var ids = filters.SeriesIds.Select(id => id.ToLower()).ToList();
+            query = query.Where(m => ids.Contains(m.SeriesId));
+        }
+
+        if (filters.StartDate.HasValue)
+            query = query.Where(m => m.Timestamp >= filters.StartDate);
+
+        if (filters.EndDate.HasValue)
+            query = query.Where(m => m.Timestamp <= filters.EndDate);
+
+        return await query
+            .Select(m => new MeasurementDto
+            {
+                Id = m.Id,
+                SeriesId = m.SeriesId,
+                Value = m.Value,
+                Timestamp = m.Timestamp,
+                SeriesName = m.Series.Name,
+                Unit = m.Series.Unit,
+                Color = m.Series.Color
+            })
+            .ToListAsync();
     }
 
     public async Task<MeasurementDto?> UpdateMeasurementAsync(int id, UpdateMeasurementRequest request)

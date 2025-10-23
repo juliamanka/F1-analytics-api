@@ -31,14 +31,34 @@ public class MeasurementController : ControllerBase
     [SwaggerOperation(
         Summary = "Get filtered measurements",
         Description = "Retrieves F1 aerodynamic measurements from wind tunnel testing with advanced filtering, sorting, and pagination options.",
-        OperationId = "GetMeasurements"
+        OperationId = "GetPagedMeasurements"
+    )]
+    [Produces("application/json")]
+    [AllowAnonymous]
+    [SwaggerResponse(200, "Correctly filtered out list of measurements returned with pagination", typeof(PagedResult<MeasurementDto>))]
+    [SwaggerResponse(400, "Bad request")]
+    public async Task<ActionResult<PagedResult<MeasurementDto>>> GetPagedMeasurements(
+        [FromQuery] MeasurementFilterParameters filters)
+    {
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
+
+        var result = await _measurementRepository.GetFilteredMeasurementsPagedAsync(filters);
+        return Ok(result);
+    }
+    
+    [HttpGet("all")]
+    [SwaggerOperation(
+        Summary = "Get filtered measurements",
+        Description = "Retrieves all F1 aerodynamic measurements from wind tunnel testing with advanced filtering options, for dashboard.",
+        OperationId = "GetAllMeasurements"
     )]
     [Produces("application/json")]
     [AllowAnonymous]
     [SwaggerResponse(200, "Correctly filtered out list of measurements returned")]
     [SwaggerResponse(400, "Bad request")]
-    public async Task<ActionResult<PagedResult<MeasurementDto>>> GetMeasurements(
-        [FromQuery] MeasurementFilterParameters filters)
+    public async Task<ActionResult<List<MeasurementDto>>> GetMeasurements(
+        [FromQuery] MeasurementDashboardFilters filters)
     {
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
@@ -151,7 +171,7 @@ public class MeasurementController : ControllerBase
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
 
-        var measurements = await _measurementRepository.GetFilteredMeasurementsAsync(exportRequest.ToFilterParameters());
+        var measurements = await _measurementRepository.GetFilteredMeasurementsPagedAsync(exportRequest.ToFilterParameters());
     
         var htmlContent = await _exportService.GeneratePrintableHtmlAsync(measurements, exportRequest);
     

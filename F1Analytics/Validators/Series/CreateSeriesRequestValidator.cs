@@ -29,14 +29,15 @@ public class CreateSeriesRequestValidator : AbstractValidator<CreateSeriesReques
         RuleFor(x => x.MinValue)
             .NotEmpty()
             .WithMessage("MinValue is required")
-            .InclusiveBetween(-1500, -50)
-            .WithMessage("MinValue must be between -1500 and -50 Newtons");
+            .GreaterThanOrEqualTo(-1500)
+            .WithMessage("MinValue cannot be less than -1500 N");
+
 
         RuleFor(x => x.MaxValue)
             .NotEmpty()
             .WithMessage("MaxValue is required")
-            .InclusiveBetween(-1500, -50)
-            .WithMessage("MaxValue must be between -1500 and -50 Newtons");
+            .LessThanOrEqualTo(-50)
+            .WithMessage("MaxValue cannot be greater than -50 N");
 
         RuleFor(x => x.Unit)
             .NotEmpty()

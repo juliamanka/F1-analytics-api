@@ -72,7 +72,7 @@ namespace F1Analytics.Controllers
         [Produces("application/json")]
         [SwaggerResponse(401,"Unauthorized")]
         [SwaggerResponse(200, "User logged in")]
-        public async Task<IActionResult> Login(UserDto model)
+        public async Task<IActionResult> Login(LoginRequest model)
         {
             var user = await _userManager.FindByNameAsync(model.UserName);
             if (user == null || !await _userManager.CheckPasswordAsync(user, model.Password))

@@ -1,10 +1,10 @@
 using System.Text;
-using Microsoft.EntityFrameworkCore;
+using System.Text.Json;
+using F1Analytics.Configuration;
 using F1Analytics.Database;
 using F1Analytics.Database.Models;
 using F1Analytics.Database.Repositories;
 using F1Analytics.Middlewares;
-using F1Analytics.Requests.Measurement;
 using F1Analytics.Services;
 using F1Analytics.Validators.Measurements;
 using F1Analytics.Validators.Series;
@@ -12,7 +12,9 @@ using FluentValidation;
 using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -27,28 +29,27 @@ builder.Services.AddSwaggerGen(c =>
     c.SwaggerDoc("v1", new() { Title = "F1Analytics API", Version = "v1" });
     c.EnableAnnotations();
     
-    c.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme()
+    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
-        Name = "Authorization",
-        Type = Microsoft.OpenApi.Models.SecuritySchemeType.ApiKey,
-        Scheme = "Bearer",
+        Type = SecuritySchemeType.Http, 
+        Scheme = "bearer",             
         BearerFormat = "JWT",
-        In = Microsoft.OpenApi.Models.ParameterLocation.Header,
-        Description = "Enter 'Bearer' [space] and then your JWT token."
+        In = ParameterLocation.Header,
+        Description = "Enter your JWT token in the format **Bearer {token}**"
     });
 
-    c.AddSecurityRequirement(new Microsoft.OpenApi.Models.OpenApiSecurityRequirement
+    c.AddSecurityRequirement(new OpenApiSecurityRequirement
     {
         {
-            new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+            new OpenApiSecurityScheme
             {
-                Reference = new Microsoft.OpenApi.Models.OpenApiReference
+                Reference = new OpenApiReference
                 {
-                    Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme,
+                    Type = ReferenceType.SecurityScheme,
                     Id = "Bearer"
                 }
             },
-            new string[] { }
+            new string[] {}
         }
     });
 });
@@ -75,6 +76,7 @@ builder.Services.AddAuthentication(options =>
             ClockSkew = TimeSpan.Zero
         };
     });
+builder.Services.AddAuthorization();
 
 builder.Services.AddDbContext<F1AnalyticsDbContext>(options =>
 {
@@ -90,20 +92,13 @@ builder.Services.AddDbContext<F1AnalyticsDbContext>(options =>
     }
 });
 
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("AllowSPA", policy =>
-    {
-        policy.WithOrigins("http://localhost:3000", "https://localhost:3000") // React dev server
-            .AllowAnyMethod()
-            .AllowAnyHeader()
-            .AllowCredentials();
-    });
-});
-
-builder.Services.AddIdentity<User, IdentityRole>()
+builder.Services.AddIdentityCore<User>()
+    .AddRoles<IdentityRole>()
     .AddEntityFrameworkStores<F1AnalyticsDbContext>()
     .AddDefaultTokenProviders();
+
+builder.Services.Configure<PagedResultConfiguration>(builder.Configuration.GetSection("PagedResultConfiguration"));
+
 
 builder.Services.AddFluentValidationAutoValidation();
 builder.Services.AddFluentValidationClientsideAdapters();
@@ -112,8 +107,18 @@ builder.Services.AddValidatorsFromAssemblyContaining<CreateSeriesRequestValidato
 builder.Services.AddValidatorsFromAssemblyContaining<UpdateMeasurementRequestValidator>();
 builder.Services.AddValidatorsFromAssemblyContaining<CreateSeriesRequestValidator>();
 
-builder.Services.AddControllers();
-builder.Services.AddAuthorization();
+builder.Services.AddControllers()
+    .AddJsonOptions(options => { options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase; });
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAngular",
+        policy => policy
+            .WithOrigins("http://localhost:4200")
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .AllowCredentials());
+});
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddProblemDetails();
 builder.Services.AddScoped<IAuthService, AuthService>();
@@ -140,9 +145,9 @@ app.UseMiddleware<DatabaseErrorHandler>();
 
 app.UseHttpsRedirection();    
 
-app.UseRouting();             
-
-app.UseAuthentication();      
+app.UseRouting();     
+app.UseCors("AllowAngular");
+app.UseAuthentication();  
 app.UseAuthorization();       
 
 app.MapControllers();        

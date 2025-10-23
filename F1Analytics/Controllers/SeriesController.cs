@@ -1,6 +1,7 @@
 using F1Analytics.Database.Repositories;
 using F1Analytics.DTOs;
 using F1Analytics.Requests.Series;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.AspNetCore.Annotations;
@@ -78,7 +79,7 @@ namespace F1Analytics.Controllers
         }
 
         [HttpPut("{id:int}")]
-        [Authorize]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         [Produces("application/json")]
         [Consumes("application/json")]
         [SwaggerResponse(400, "Error in request body")]
