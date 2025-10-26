@@ -9,5 +9,6 @@ public interface ISeriesRepository
     public Task<SeriesDto?> GetSeriesByIdAsync(int id);
     public Task CreateSeriesAsync(CreateSeriesRequest seriesDto);
     public Task UpdateSeriesAsync(int id, SeriesDto seriesDto);
+    public Task DeleteSeriesAsync(int id);
 
 }

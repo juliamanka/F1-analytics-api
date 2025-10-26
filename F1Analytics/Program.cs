@@ -77,6 +77,15 @@ builder.Services.AddAuthentication(options =>
         };
     });
 builder.Services.AddAuthorization();
+builder.Services.AddIdentity<User, IdentityRole>(options =>
+    {
+        options.Password.RequireDigit = false;
+        options.Password.RequireUppercase = false;
+        options.Password.RequireNonAlphanumeric = false;
+        options.Password.RequiredLength = 6;
+    })
+    .AddEntityFrameworkStores<F1AnalyticsDbContext>()
+    .AddDefaultTokenProviders();
 
 builder.Services.AddDbContext<F1AnalyticsDbContext>(options =>
 {
@@ -91,11 +100,6 @@ builder.Services.AddDbContext<F1AnalyticsDbContext>(options =>
         options.EnableDetailedErrors();
     }
 });
-
-builder.Services.AddIdentityCore<User>()
-    .AddRoles<IdentityRole>()
-    .AddEntityFrameworkStores<F1AnalyticsDbContext>()
-    .AddDefaultTokenProviders();
 
 builder.Services.Configure<PagedResultConfiguration>(builder.Configuration.GetSection("PagedResultConfiguration"));
 

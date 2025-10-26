@@ -77,7 +77,27 @@ namespace F1Analytics.Controllers
 
             return CreatedAtAction(nameof(GetSeriesById), req);
         }
+        
+        [HttpDelete("{id:int}")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        [Produces("application/json")]
+        [SwaggerResponse(404, "Series with given id not found")]
+        [SwaggerResponse(204, "Series deleted")]
+        [SwaggerOperation(
+            Summary = "Delete series",
+            Description = "Deletes an existing wing configuration series by ID. Requires authentication."
+        )]
+        public async Task<ActionResult> DeleteSeries(int id)
+        {
+            var existingSeries = await _seriesRepository.GetSeriesByIdAsync(id);
+            if (existingSeries == null)
+                return NotFound();
 
+            await _seriesRepository.DeleteSeriesAsync(id);
+            return NoContent();
+        }
+        
+        
         [HttpPut("{id:int}")]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         [Produces("application/json")]

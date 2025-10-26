@@ -33,6 +33,13 @@ public class SeriesRepository : ISeriesRepository
             }).ToListAsync();
     }
     
+    public async Task DeleteSeriesAsync(int id)
+    {
+        var series = await _context.Series.FirstAsync(s => s.Id == id);
+        _context.Series.Remove(series);
+        await _context.SaveChangesAsync();
+    }
+    
     public async Task<SeriesDto?> GetSeriesByIdAsync(int id)
     {
         var series = await _context.Series.Include(s => s.Measurements)
