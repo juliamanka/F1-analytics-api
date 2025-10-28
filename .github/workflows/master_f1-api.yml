@@ -15,7 +15,8 @@ jobs:
       - run: dotnet restore && dotnet publish -c Release -o ./publish
       - uses: azure/webapps-deploy@v3
         with:
-          app-name: "<YOUR_BACKEND_APP_NAME>"
+          app-name: "f1-api"
           publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
           package: ./publish
+
 
