@@ -2,15 +2,15 @@ name: Build & Deploy .NET API to Azure App Service (OIDC)
 
 on:
   push:
-    branches: [ "master" ]
+    branches: [ "master" ]   
   workflow_dispatch:
 
 permissions:
-  id-token: write        # required for OIDC
+  id-token: write        
   contents: read
 
 env:
-  DOTNET_VERSION: "9.0"  # or 9.0 when you upgrade
+  DOTNET_VERSION: "9.0"
 
 jobs:
   build-and-deploy:
@@ -29,18 +29,18 @@ jobs:
       run: dotnet restore
 
     - name: Build
-      run: dotnet build --configuration Release --no-restore
+      run: dotnet build F1Analytics/F1Analytics.csproj --configuration Release --no-restore
 
     - name: Run tests
       run: dotnet test --configuration Release --no-build --verbosity normal
 
     - name: Publish
-      run: dotnet publish ./F1Analytics/F1Analytics.csproj --configuration Release --output ./publish
+      run: dotnet publish F1Analytics/F1Analytics.csproj --configuration Release --output ./publish
 
-    - name: Azure Login using OIDC
+    - name: Azure Login (OIDC)
       uses: azure/login@v2
       with:
-        client-id: ${{ vars.AZURE_CLIENT_ID || 'MANAGED_IDENTITY' }}
+        client-id: ${{ vars.AZURE_CLIENT_ID }}
         tenant-id: ${{ vars.AZURE_TENANT_ID }}
         subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
 
@@ -49,5 +49,4 @@ jobs:
       with:
         app-name: ${{ vars.AZURE_WEBAPP_NAME }}
         package: ./publish
-
-
+        slot-name: production
