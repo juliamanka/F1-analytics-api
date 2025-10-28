@@ -1,0 +1,53 @@
+name: Build & Deploy .NET API to Azure App Service (OIDC)
+
+on:
+  push:
+    branches: [ "master" ]
+  workflow_dispatch:
+
+permissions:
+  id-token: write        # required for OIDC
+  contents: read
+
+env:
+  DOTNET_VERSION: "9.0"  # or 9.0 when you upgrade
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+
+    - name: Restore dependencies
+      run: dotnet restore
+
+    - name: Build
+      run: dotnet build --configuration Release --no-restore
+
+    - name: Run tests
+      run: dotnet test --configuration Release --no-build --verbosity normal
+
+    - name: Publish
+      run: dotnet publish ./YOUR_PROJECT.csproj \
+              --configuration Release \
+              --output ./publish
+
+    - name: Azure Login using OIDC
+      uses: azure/login@v2
+      with:
+        client-id: ${{ vars.AZURE_CLIENT_ID || 'MANAGED_IDENTITY' }}
+        tenant-id: ${{ vars.AZURE_TENANT_ID }}
+        subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+    - name: Deploy to Azure Web App
+      uses: azure/webapps-deploy@v3
+      with:
+        app-name: ${{ vars.AZURE_WEBAPP_NAME }}
+        package: ./publish
