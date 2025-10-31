@@ -11,7 +11,7 @@ using Swashbuckle.AspNetCore.Annotations;
 namespace F1Analytics.Controllers;
 
 [ApiController]
-[Route("api/measurement")]
+[Route("api/measurements")]
 [SwaggerTag("Managing aerodynamic measurements for the F1 Analytics platform. Handles reading, creating, modifying and deleting downforce measurements from wind tunnel tests." +
             "Data modification operations require user authentication." +
             " Measurements represent downforce values (in Newtons) captured during testing of different F1 front wing configurations in the wind tunnel." +

@@ -97,6 +97,9 @@ public class MeasurementRepository : IMeasurementRepository
 
     public async Task CreateMeasurementAsync(CreateMeasurementRequest measurementDto)
     {
+        if (!await _context.Series.AnyAsync(s => s.SeriesId == measurementDto.SeriesId))
+            throw new ArgumentException($"Series {measurementDto.SeriesId} does not exist.");
+        
         await _context.Measurements.AddAsync(new Measurement()
         {
             SeriesId = measurementDto.SeriesId,
