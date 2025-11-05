@@ -1,10 +1,10 @@
-using Microsoft.AspNetCore.Identity;
-using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using F1Analytics.Database.Models;
 using F1Analytics.Services;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.IdentityModel.Tokens;
 
 public class AuthService : IAuthService
 {

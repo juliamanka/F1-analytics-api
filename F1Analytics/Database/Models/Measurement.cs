@@ -24,7 +24,6 @@ public class Measurement
     [Column("created_at")]
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
-    // Navigation property
     [ForeignKey("SeriesId")]
     public virtual Series? Series { get; set; }
 }

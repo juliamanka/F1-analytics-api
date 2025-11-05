@@ -1,5 +1,3 @@
-using System.ComponentModel.DataAnnotations;
-
 namespace F1Analytics.Requests.Measurement;
 
 public class CreateMeasurementRequest

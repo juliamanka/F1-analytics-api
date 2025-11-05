@@ -46,14 +46,4 @@ public class Series
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
     public virtual ICollection<Measurement> Measurements { get; set; } = new List<Measurement>();
-
-    public bool IsValueInRange(decimal value)
-    {
-        return value >= MinValue && value <= MaxValue;
-    }
-
-    public string GetValidationMessage()
-    {
-        return $"Value must be between {MinValue} and {MaxValue} {Unit}";
-    }
 }

@@ -2,7 +2,6 @@ using F1Analytics.Database.Repositories;
 using F1Analytics.DTOs;
 using F1Analytics.Requests;
 using F1Analytics.Requests.Measurement;
-using F1Analytics.Responses;
 using F1Analytics.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
